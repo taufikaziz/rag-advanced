@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced RAG Pipeline</title>
+    <link rel="stylesheet" href="/static/css/style.css?v=1785231444">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <rect width="32" height="32" rx="8" fill="#6366f1"/>
+                    <path d="M8 16h16M16 8v16" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+                <div>
+                    <h1>Advanced RAG Pipeline</h1>
+                    <span class="version">v1.0.0</span>
+                </div>
+            </div>
+            <div class="header-status">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Ready</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        
+        <!-- Document Upload -->
+        <section class="upload-section">
+            <div class="upload-card">
+                <div class="upload-header">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        Document Upload
+                    </h2>
+                </div>
+                <div class="upload-body">
+                    <div class="upload-dropzone" id="dropzone">
+                        <p>Drag &amp; drop files here or click to browse</p>
+                        <p class="upload-hint">Supported: .txt, .md, .pdf, .csv, .json, .xml, .html</p>
+                        <button type="button" class="btn-upload" id="uploadBtn">Choose Files</button>
+                        <input type="file" id="fileInput" accept=".txt,.md,.pdf,.csv,.json,.xml,.html" multiple style="position:fixed;top:-100px;left:-100px;opacity:0;width:1px;height:1px;pointer-events:none">
+                    </div>
+                    <div class="upload-progress" id="uploadProgress" style="display:none">
+                        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+                        <span id="uploadStatus">Uploading...</span>
+                    </div>
+                    <div class="doc-list" id="docList"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="query-section">
+            <div class="query-card">
+                <label for="queryInput">Masukkan Pertanyaan</label>
+                <div class="query-row">
+                    <input type="text" id="queryInput" placeholder="Contoh: Apa dampak kenaikan suku bunga terhadap sektor properti?" autocomplete="off">
+                    <button id="submitBtn" class="btn-primary">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3v14M5 8l5-5 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        Process
+                    </button>
+                </div>
+                <div class="query-options">
+                    <label class="toggle"><input type="checkbox" id="toggleRewrite" checked><span>Rewrite</span></label>
+                    <label class="toggle"><input type="checkbox" id="toggleHyDE" checked><span>HyDE</span></label>
+                    <label class="toggle"><input type="checkbox" id="toggleDecompose"><span>Decompose</span></label>
+                    <label class="toggle"><input type="checkbox" id="toggleEval" checked><span>Evaluation</span></label>
+                </div>
+            </div>
+        </section>
+
+        <section class="pipeline-section">
+            <h2>Pipeline Flow</h2>
+            <div class="pipeline-flow">
+                <div class="pipeline-row">
+                    <div class="pipeline-node user-node" id="node-user">
+                        <div class="node-icon">&quot;</div>
+                        <div class="node-label">User Query</div>
+                    </div>
+                    <div class="pipeline-arrow">&rarr;</div>
+                    <div class="pipeline-node api-node" id="node-api">
+                        <div class="node-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                        </div>
+                        <div class="node-label">FastAPI</div>
+                    </div>
+                </div>
+
+                <div class="pipeline-row">
+                    <div class="pipeline-branch">
+                        <div class="pipeline-node proc-node" id="node-rewrite">
+                            <div class="node-icon">&#9998;</div>
+                            <div class="node-label">Rewrite</div>
+                            <div class="node-status"></div>
+                        </div>
+                        <div class="pipeline-node proc-node" id="node-hyde">
+                            <div class="node-icon">&#9672;</div>
+                            <div class="node-label">HyDE</div>
+                            <div class="node-status"></div>
+                        </div>
+                        <div class="pipeline-node proc-node" id="node-decompose">
+                            <div class="node-icon">&#8853;</div>
+                            <div class="node-label">Decompose</div>
+                            <div class="node-status"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pipeline-row"><div class="pipeline-arrow down">&darr;</div></div>
+
+                <div class="pipeline-row">
+                    <div class="pipeline-node retrieval-node" id="node-retrieval">
+                        <div class="node-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                        </div>
+                        <div class="node-label">Hybrid Retrieval</div>
+                        <div class="node-sub">BM25 + Embedding</div>
+                        <div class="node-status"></div>
+                    </div>
+                </div>
+
+                <div class="pipeline-row"><div class="pipeline-arrow down">&darr;</div></div>
+
+                <div class="pipeline-row">
+                    <div class="pipeline-node rerank-node" id="node-rerank">
+                        <div class="node-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                        </div>
+                        <div class="node-label">Cross-Encoder</div>
+                        <div class="node-sub">Reranking</div>
+                        <div class="node-status"></div>
+                    </div>
+                </div>
+
+                <div class="pipeline-row"><div class="pipeline-arrow down">&darr;</div></div>
+
+                <div class="pipeline-row">
+                    <div class="pipeline-node topk-node" id="node-topk">
+                        <div class="node-icon">&#8851;</div>
+                        <div class="node-label">Top-K Context</div>
+                        <div class="node-status"></div>
+                    </div>
+                </div>
+
+                <div class="pipeline-row"><div class="pipeline-arrow down">&darr;</div></div>
+
+                <div class="pipeline-row">
+                    <div class="pipeline-node llm-node" id="node-llm">
+                        <div class="node-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 015 18.68V20a2 2 0 01-2 2H9a2 2 0 01-2-2v-1.32A10 10 0 0112 2z"/><circle cx="12" cy="8" r="2"/><circle cx="8" cy="14" r="1.5"/><circle cx="16" cy="14" r="1.5"/></svg>
+                        </div>
+                        <div class="node-label">LLM</div>
+                        <div class="node-sub">Generation</div>
+                        <div class="node-status"></div>
+                    </div>
+                    <div class="pipeline-arrow">&rarr;</div>
+                    <div class="pipeline-node answer-node" id="node-answer">
+                        <div class="node-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        </div>
+                        <div class="node-label">Answer</div>
+                        <div class="node-status"></div>
+                    </div>
+                </div>
+
+                <div class="pipeline-row split-row">
+                    <div class="pipeline-node eval-node" id="node-eval">
+                        <div class="node-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                        </div>
+                        <div class="node-label">Evaluation</div>
+                        <div class="node-sub">Faithfulness, Relevancy</div>
+                    </div>
+                    <div class="pipeline-node obs-node" id="node-obs">
+                        <div class="node-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
+                        </div>
+                        <div class="node-label">Observability</div>
+                        <div class="node-sub">Latency, Tokens, Cost</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="results-section" id="resultsSection" style="display:none">
+            <h2>Results</h2>
+            <div class="results-grid">
+                <div class="result-card answer-card">
+                    <h3>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        Answer
+                    </h3>
+                    <div id="answerContent" class="answer-text"></div>
+                </div>
+
+                <div class="result-card" id="qpCard">
+                    <h3>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.18 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.18 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.18l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.18-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.18l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.18 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                        Query Processing
+                    </h3>
+                    <div id="qpContent"></div>
+                </div>
+
+                <div class="result-card wide-card" id="docsCard">
+                    <h3>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        Retrieved Documents
+                    </h3>
+                    <div id="docsContent"></div>
+                </div>
+
+                <div class="result-card" id="evalCard">
+                    <h3>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                        Evaluation
+                    </h3>
+                    <div id="evalContent"></div>
+                </div>
+
+                <div class="result-card" id="traceCard">
+                    <h3>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
+                        Observability
+                    </h3>
+                    <div id="traceContent"></div>
+                </div>
+            </div>
+        </section>
+
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <p>Processing query...</p>
+                <p class="loading-stage" id="loadingStage">Initializing</p>
+            </div>
+        </div>
+    </main>
+
+    <script src="/static/js/app.js?v=1785231444"></script>
+</body>
+</html>
