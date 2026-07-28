@@ -118,12 +118,3 @@ rag-advanced/
 +-- README.md
 `
 
-## Fase Pengembangan (PRD)
-
-| Fase | Cakupan | Status |
-|------|---------|--------|
-| Fase 1 | FastAPI skeleton + Hybrid Retrieval + LLM Generation | ✅ |
-| Fase 2 | Query Processing + Cross-Encoder Reranking | ✅ |
-| Fase 3 | Evaluation Module | ✅ |
-| Fase 4 | Observability | ✅ |
-| Fase 5 | Hardening, Testing, Dokumentasi | 📝 |
