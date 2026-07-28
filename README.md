@@ -4,7 +4,7 @@ Pipeline **Retrieval-Augmented Generation (RAG)** modular dengan query processin
 
 ---
 
-## Screenshot Aplikasi
+## Antarmuka Aplikasi
 
 ![Dashboard Pipeline](screenshots/image.png)
 *Tampilan aplikasi RAG Pipeline*
